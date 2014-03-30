@@ -46,21 +46,16 @@ namespace Microsoft.Xna.Framework.Content
     {
         protected internal override IndexBuffer Read(ContentReader input, IndexBuffer existingInstance)
         {
-            IndexBuffer indexBuffer = existingInstance;
+            var sixteenBits = input.ReadBoolean();
+            var dataSize = input.ReadInt32();
+            var data = input.ReadBytes(dataSize);
 
-            bool sixteenBits = input.ReadBoolean();
-            int dataSize = input.ReadInt32();
-            byte[] data = input.ReadBytes(dataSize);
+            var buffer = new IndexBuffer(input.GraphicsDevice, 
+                sixteenBits ? IndexElementSize.SixteenBits : IndexElementSize.ThirtyTwoBits, 
+                dataSize / ( sixteenBits ? 2 : 4 ), BufferUsage.None);
 
-            if (indexBuffer == null)
-            {
-                indexBuffer = new IndexBuffer(input.GraphicsDevice,
-                    sixteenBits ? IndexElementSize.SixteenBits : IndexElementSize.ThirtyTwoBits, 
-                    dataSize / (sixteenBits ? 2 : 4), BufferUsage.None);
-            }
-
-            indexBuffer.SetData(data);
-            return indexBuffer;
+            buffer.SetData(data);
+            return buffer;
         }
     }
 }

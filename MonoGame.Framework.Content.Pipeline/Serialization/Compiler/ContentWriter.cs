@@ -85,9 +85,7 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Serialization.Compiler
             this.targetProfile = targetProfile;
             this.compressContent = compressContent;
             this.rootDirectory = rootDirectory;
-
-            // Normalize the directory format so PathHelper.GetRelativePath will compute external references correctly.
-            this.referenceRelocationPath = PathHelper.NormalizeDirectory(referenceRelocationPath);
+            this.referenceRelocationPath = referenceRelocationPath;
 
             outputStream = this.OutStream;
             headerStream = new MemoryStream();

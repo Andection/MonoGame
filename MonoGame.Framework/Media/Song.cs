@@ -89,13 +89,7 @@ namespace Microsoft.Xna.Framework.Media
 #elif WINDOWS_MEDIA_SESSION 
             GetTopology();      
 #elif !WINDOWS_MEDIA_ENGINE && !WINDOWS_PHONE
-
-            using (var s = File.OpenRead(_name))
-            {
-                var soundEffect = SoundEffect.FromStream(s);
-                _sound = soundEffect.CreateInstance();
-            }
-            
+            _sound = new SoundEffect(_name).CreateInstance();
 #endif
         }
 

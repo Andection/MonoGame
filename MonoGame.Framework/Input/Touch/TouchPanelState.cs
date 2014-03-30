@@ -146,10 +146,6 @@ namespace Microsoft.Xna.Framework.Input.Touch
                         stateChanged |= touch.UpdateState(newTouch);
                         foundEvent = true;
                         events.RemoveAt(j);
-                        j--;
-                        //consume unchanged events
-                        if (!stateChanged)
-                            continue;
                         break;
                     }
                 }

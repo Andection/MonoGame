@@ -7,7 +7,6 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Graphics
     /// <summary>
     /// Provides a base class for graphics types that define local coordinate systems.
     /// </summary>
-    [System.Diagnostics.DebuggerDisplay("Node '{Name}'")]
     public class NodeContent : ContentItem
     {
         Matrix transform;

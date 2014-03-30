@@ -109,9 +109,8 @@ namespace Microsoft.Xna.Framework.Content
             else
                 throw new NotSupportedException("Unsupported wave format!");
 
-            return new SoundEffect(data, 0, count, sampleRate, (AudioChannels)channels, loopStart, loopLength)
+            return new SoundEffect(waveFormat, data, 0, count, loopStart, loopLength)
             {
-                _format = waveFormat,
                 Name = input.AssetName,
             };
 #else
@@ -145,12 +144,13 @@ namespace Microsoft.Xna.Framework.Content
                 (header[6] << 16) +
                 (header[7] << 24)
             );
-
-            var channels = (header[2] == 2) ? AudioChannels.Stereo : AudioChannels.Mono;
-            return new SoundEffect(data, sampleRate, channels)
-                {
-                    Name = input.AssetName
-                };
+            
+            return new SoundEffect(
+                input.AssetName,
+                data,
+                sampleRate,
+                (header[2] == 2) ? AudioChannels.Stereo : AudioChannels.Mono
+            );
 #endif
 		}
 	}

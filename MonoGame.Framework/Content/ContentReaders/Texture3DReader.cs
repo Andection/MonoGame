@@ -8,19 +8,13 @@ namespace Microsoft.Xna.Framework.Content
     {
         protected internal override Texture3D Read(ContentReader reader, Texture3D existingInstance)
         {
-            Texture3D texture = null;
-
-            SurfaceFormat format = (SurfaceFormat)reader.ReadInt32();
+            var format = (SurfaceFormat)reader.ReadInt32();
             int width = reader.ReadInt32();
             int height = reader.ReadInt32();
             int depth = reader.ReadInt32();
             int levelCount = reader.ReadInt32();
 
-            if (existingInstance == null)
-                texture = new Texture3D(reader.GraphicsDevice, width, height, depth, levelCount > 1, format);
-            else
-                texture = existingInstance;
-            
+            Texture3D texture = new Texture3D(reader.GraphicsDevice, width, height, depth, levelCount > 1, format);
             for (int i = 0; i < levelCount; i++)
             {
                 int dataSize = reader.ReadInt32();

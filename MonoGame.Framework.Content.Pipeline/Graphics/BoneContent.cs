@@ -7,7 +7,6 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Graphics
     /// <summary>
     /// Represents an animation skeleton.
     /// </summary>
-    [System.Diagnostics.DebuggerDisplay("Bone '{Name}'")]
     public class BoneContent : NodeContent
     {
         /// <summary>

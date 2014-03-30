@@ -130,20 +130,16 @@ namespace Microsoft.Xna.Framework.Content.Pipeline.Graphics
 
                 // Try to determine the vertex format
                 // TODO: Add support for additional formats as they become testable
-                if (channel.ElementType == typeof(Vector4))
-                    format = VertexElementFormat.Vector4;
-                else if (channel.ElementType == typeof(Vector3))
+                if (channel.ElementType == typeof(Vector3))
                     format = VertexElementFormat.Vector3;
                 else if (channel.ElementType == typeof(Vector2))
                     format = VertexElementFormat.Vector2;
-                else if (channel.ElementType == typeof(Single))
-                    format = VertexElementFormat.Single;
                 else
-                    throw new InvalidContentException(string.Format("Unrecognized vertex content type: '{0}'", channel.ElementType));
+                    throw new InvalidContentException("Unrecognized vertex content type.");
 
                 // Try to determine the vertex usage
                 if (!VertexChannelNames.TryDecodeUsage(channel.Name, out usage))
-                    throw new InvalidContentException(string.Format("Unknown vertex element usage for channel '{0}'", channel.Name));
+                    throw new InvalidContentException("Unknown vertex element usage.");
 
                 // Try getting the usage index
                 var usageIndex = VertexChannelNames.DecodeUsageIndex(channel.Name);

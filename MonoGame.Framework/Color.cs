@@ -26,7 +26,6 @@ SOFTWARE.
 #endregion License
 
 using System;
-using System.Text;
 using System.Runtime.Serialization;
 
 namespace Microsoft.Xna.Framework
@@ -1774,17 +1773,7 @@ namespace Microsoft.Xna.Framework
         /// <returns>The string representation of the color value of this instance.</returns>
 	public override string ToString ()
 	{
-        StringBuilder sb = new StringBuilder(25);
-        sb.Append("{R:");
-        sb.Append(R);
-        sb.Append(" G:");
-        sb.Append(G);
-        sb.Append(" B:");
-        sb.Append(B);
-        sb.Append(" A:");
-        sb.Append(A);
-        sb.Append("}");
-        return sb.ToString();
+	    return string.Format("[Color: R={0}, G={1}, B={2}, A={3}, PackedValue={4}]", R, G, B, A, PackedValue);
 	}
 	
 	/// <summary>

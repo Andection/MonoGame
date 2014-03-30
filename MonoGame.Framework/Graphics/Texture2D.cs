@@ -39,6 +39,12 @@ purpose and non-infringement.
 #endregion License
 
 using System;
+using System.Linq;
+using ImageTools;
+using ImageTools.IO;
+using ImageTools.IO.Bmp;
+using ImageTools.IO.Jpeg;
+using ImageTools.IO.Png;
 #if !PSM
 using System.Drawing;
 #else
@@ -107,6 +113,13 @@ namespace Microsoft.Xna.Framework.Graphics
 {
     public class Texture2D : Texture
     {
+        static Texture2D()
+        {
+            Decoders.AddDecoder<BmpDecoder>();
+            Decoders.AddDecoder<PngDecoder>();
+            Decoders.AddDecoder<JpegDecoder>();
+        }
+
         internal protected enum SurfaceType
         {
             Texture,
@@ -815,7 +828,12 @@ namespace Microsoft.Xna.Framework.Graphics
                 return texture;
             }
 #elif WINDOWS_PHONE
-            throw new NotImplementedException();
+
+		    var image = GetImage(stream);
+
+            var texture = new Texture2D(graphicsDevice, image.PixelWidth, image.PixelHeight);
+		    texture.SetData(image.GetColors());
+            return texture;
 
 #elif WINDOWS_STOREAPP || DIRECTX
 
@@ -858,6 +876,16 @@ namespace Microsoft.Xna.Framework.Graphics
                 return texture;
             }
 #endif
+        }
+        //Converts Pixel Data from ARGB to ABGR 
+        private static void ConvertToABGR(int pixelHeight, int pixelWidth, int[] pixels)
+        {
+            int pixelCount = pixelWidth * pixelHeight;
+            for (int i = 0; i < pixelCount; ++i)
+            {
+                uint pixel = (uint)pixels[i];
+                pixels[i] = (int)((pixel & 0xFF00FF00) | ((pixel & 0x00FF0000) >> 16) | ((pixel & 0x000000FF) << 16));
+            }
         }
 
         private void FillTextureFromStream(Stream stream)
@@ -1109,8 +1137,29 @@ namespace Microsoft.Xna.Framework.Graphics
 #if OPENGL
             GenerateGLTextureIfRequired();
             FillTextureFromStream(textureStream);
+#elif WINDOWS_PHONE
+            FillTexture(textureStream);
 #endif
-}
+        }
+
+        private void FillTexture(Stream textureStream)
+        {
+            var image = GetImage(textureStream);
+            SetData(image.GetColors());
+        }
+
+        private static ExtendedImage GetImage(Stream stream)
+        {
+            var image = new ExtendedImage();
+            image.SetSource(stream);
+            var waitEvent = new ManualResetEventSlim(false);
+
+            image.LoadingCompleted += (s, e) => waitEvent.Set();
+            image.LoadingFailed += (s, e) => waitEvent.Set();
+
+            waitEvent.Wait(TimeSpan.FromSeconds(5));
+            return image;
+        }
 
 #if OPENGL
         private void GenerateGLTextureIfRequired()
@@ -1261,5 +1310,24 @@ namespace Microsoft.Xna.Framework.Graphics
 
 #endif
 	}
-}
 
+    public static class ExtendedImageExt
+    {
+        public static Color[] GetColors(this ExtendedImage image)
+        {
+            return Enumerable.Range(0, image.PixelWidth*image.PixelHeight).Select(index =>
+            {
+                var x = index%image.PixelWidth;
+                var y = index/image.PixelWidth;
+                var color = image[x, y];
+                return new Color
+                {
+                    A = color.A,
+                    B = color.B,
+                    G = color.G,
+                    R = color.R
+                };
+            }).ToArray();
+        }
+    }
+}

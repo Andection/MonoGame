@@ -211,13 +211,17 @@ namespace Microsoft.Xna.Framework.Graphics
             base.Dispose(disposing);
         }
 
-        internal protected override void GraphicsDeviceResetting()
-        {
-            for (var i = 0; i < ConstantBuffers.Length; i++)
-                ConstantBuffers[i].Clear();
-        }
+	    protected internal override void GraphicsDeviceResetting()
+	    {
+	        if (ConstantBuffers == null)
+	            return;
+	        foreach (var constantBuffer in ConstantBuffers.Where(b => b != null).ToArray())
+	        {
+	            constantBuffer.Clear();
+	        }
+	    }
 
-        #region Effect File Reader
+	    #region Effect File Reader
 
         internal static byte[] LoadEffectResource(string name)
         {

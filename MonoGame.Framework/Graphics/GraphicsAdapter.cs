@@ -41,7 +41,6 @@ purpose and non-infringement.
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-
 #if MONOMAC
 using MonoMac.AppKit;
 using MonoMac.Foundation;
@@ -49,6 +48,8 @@ using MonoMac.Foundation;
 using MonoTouch.UIKit;
 #elif ANDROID
 using Android.Views;
+#elif WINDOWS_PHONE
+using Microsoft.Phone.Controls;
 #endif
 
 namespace Microsoft.Xna.Framework.Graphics
@@ -75,6 +76,12 @@ namespace Microsoft.Xna.Framework.Graphics
         internal GraphicsAdapter(View screen)
         {
             _view = screen;
+        }
+#elif WINDOWS_PHONE
+        private GameWindow _page;
+        internal GraphicsAdapter(GameWindow page)
+        {
+            _page = page;
         }
 #else
         internal GraphicsAdapter()
@@ -109,6 +116,8 @@ namespace Microsoft.Xna.Framework.Graphics
 #elif (WINDOWS && OPENGL) || LINUX
 
                 return new DisplayMode(OpenTK.DisplayDevice.Default.Width, OpenTK.DisplayDevice.Default.Height, (int)OpenTK.DisplayDevice.Default.RefreshRate, SurfaceFormat.Color);
+#elif WINDOWS_PHONE
+                return new DisplayMode(_page.ClientBounds.Width, (int)_page.ClientBounds.Height, 60, SurfaceFormat.Color);
 #else
                 return new DisplayMode(800, 600, 60, SurfaceFormat.Color);
 #endif
@@ -137,7 +146,7 @@ namespace Microsoft.Xna.Framework.Graphics
                     adapters = new ReadOnlyCollection<GraphicsAdapter>(new GraphicsAdapter[] { new GraphicsAdapter(Game.Instance.Window) });
 #else
                     adapters = new ReadOnlyCollection<GraphicsAdapter>(
-						new GraphicsAdapter[] {new GraphicsAdapter()});
+						new GraphicsAdapter[] {new GraphicsAdapter(Game.Instance.Window)});
 #endif
                 }
                 return adapters;

@@ -82,7 +82,14 @@ namespace Microsoft.Xna.Framework
 
 #if WINRT
 
-        private static async Task<Stream> OpenStreamAsync(string name)
+        public static bool IsExists(string name)
+        {
+            var fullName = Path.Combine(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, name);
+
+            return File.Exists(fullName);
+        }
+
+        public static async Task<Stream> OpenStreamAsync(string name)
         {
             var package = Windows.ApplicationModel.Package.Current;
 

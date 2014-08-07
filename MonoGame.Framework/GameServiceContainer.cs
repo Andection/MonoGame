@@ -64,10 +64,7 @@ namespace Microsoft.Xna.Framework
                 throw new ArgumentNullException("type");
 						
             object service;
-            if (services.TryGetValue(type, out service))
-                return service;
-
-            return null;
+            return services.TryGetValue(type, out service) ? service : null;
         }
 
         public void RemoveService(Type type)

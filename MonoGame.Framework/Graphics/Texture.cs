@@ -146,13 +146,10 @@ namespace Microsoft.Xna.Framework.Graphics
 
         internal SharpDX.Direct3D11.Resource GetTexture()
         {
-            if (_texture == null)
-                _texture = CreateTexture();
-
-            return _texture;
+            return _texture ?? (_texture = CreateTexture());
         }
 
-        internal SharpDX.Direct3D11.ShaderResourceView GetShaderResourceView()
+	    internal SharpDX.Direct3D11.ShaderResourceView GetShaderResourceView()
         {
             if (_resourceView == null)
                 _resourceView = new SharpDX.Direct3D11.ShaderResourceView(GraphicsDevice._d3dDevice, GetTexture());

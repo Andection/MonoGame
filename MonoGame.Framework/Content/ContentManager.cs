@@ -43,7 +43,9 @@ using System.IO;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
-
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Phone.Shell;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Path = System.IO.Path;
@@ -234,7 +236,14 @@ namespace Microsoft.Xna.Framework.Content
             loadedAssets[assetName] = result;
             return result;
 		}
-		
+
+	    private bool IsXnbFile(string assetName)
+	    {
+            var assetPath = Path.Combine(RootDirectory, assetName) + ".xnb";
+
+	        return TitleContainer.IsExists(assetPath);
+	    }
+
 		protected virtual Stream OpenStream(string assetName)
 		{
 			Stream stream;
@@ -292,19 +301,18 @@ namespace Microsoft.Xna.Framework.Content
 					throw new InvalidOperationException("No Graphics Device Service");
 				}
 			}
-			
-			Stream stream = null;
-			try
-            {
-				//try load it traditionally
-				stream = OpenStream(assetName);
 
-                // Try to load as XNB file
+		    try
+			{
+			    //try load it traditionally
+			    var stream = OpenStream(assetName);
+
+			    // Try to load as XNB file
                 try
                 {
-                    using (BinaryReader xnbReader = new BinaryReader(stream))
+                    using (var xnbReader = new BinaryReader(stream))
                     {
-                        using (ContentReader reader = GetContentReaderFromXnb(assetName, ref stream, xnbReader, recordDisposableObject))
+                        using (var reader = GetContentReaderFromXnb(assetName, ref stream, xnbReader, recordDisposableObject))
                         {
                             result = reader.ReadAsset<T>();
                             if (result is GraphicsResource)
@@ -319,8 +327,8 @@ namespace Microsoft.Xna.Framework.Content
                         stream.Dispose();
                     }
                 }
-            }
-            catch (ContentLoadException ex)
+			}
+			catch (ContentLoadException ex)
             {
 				//MonoGame try to load as a non-content file
 
@@ -388,10 +396,9 @@ namespace Microsoft.Xna.Framework.Content
         {
             if (typeof(T) == typeof(Texture2D) || typeof(T) == typeof(Texture))
             {
-                using (Stream assetStream = TitleContainer.OpenStream(assetName))
+                using (var assetStream = TitleContainer.OpenStream(assetName))
                 {
-                    Texture2D texture = Texture2D.FromStream(
-                        graphicsDeviceService.GraphicsDevice, assetStream);
+                    var texture = Texture2D.FromStream(graphicsDeviceService.GraphicsDevice, assetStream);
                     texture.Name = originalAssetName;
                     return texture;
                 }
@@ -417,7 +424,7 @@ namespace Microsoft.Xna.Framework.Content
 #endif
             else if ((typeof(T) == typeof(Effect)))
             {
-                using (Stream assetStream = TitleContainer.OpenStream(assetName))
+                using (var assetStream = TitleContainer.OpenStream(assetName))
                 {
                     var data = new byte[assetStream.Length];
                     assetStream.Read(data, 0, (int)assetStream.Length);
@@ -461,7 +468,7 @@ namespace Microsoft.Xna.Framework.Content
                 int compressedSize = xnbLength - 14;
                 int decompressedSize = xnbReader.ReadInt32();
 
-                MemoryStream decompressedStream = new MemoryStream(decompressedSize);
+                var decompressedStream = new MemoryStream(decompressedSize);
 
                 // default window size for XNB encoded files is 64Kb (need 16 bits to represent it)
                 LzxDecoder dec = new LzxDecoder(16);
@@ -592,60 +599,83 @@ namespace Microsoft.Xna.Framework.Content
 					throw new InvalidOperationException("No Graphics Device Service");
 				}
 			}
-			
-			Stream stream = null;
-			try
-			{
-                //try load it traditionally
-                stream = OpenStream(assetName);
 
-                // Try to load as XNB file
+            if (IsXnbFile(assetName))
+            {
                 try
                 {
-                    using (BinaryReader xnbReader = new BinaryReader(stream))
-                    {
-                        using (ContentReader reader = GetContentReaderFromXnb(assetName, ref stream, xnbReader, null))
-                        {
-                            reader.InitializeTypeReaders();
-                            reader.ReadObject<T>(currentAsset);
-                            reader.ReadSharedResources();
-                        }
-                    }
+                    //try load it traditionally
+                    LoadXnbAsset(currentAsset, assetName);
                 }
-                finally
+                catch (ContentLoadException)
                 {
-                    if (stream != null)
-                    {
-                        stream.Dispose();
-                    }
+                    // Try to reload as a non-xnb file.
+                    // Just textures supported for now.
+
+                    ReloadAssetCore(originalAssetName, currentAsset, assetName);
                 }
-			}
-			catch (ContentLoadException)
-			{
-				// Try to reload as a non-xnb file.
-                // Just textures supported for now.
-
-                assetName = TitleContainer.GetFilename(Path.Combine(RootDirectory, assetName));
-
-                assetName = Normalize<T>(assetName);
-
-                ReloadRawAsset(currentAsset, assetName, originalAssetName);
             }
+            else
+            {
+                ReloadAssetCore(originalAssetName, currentAsset, assetName);
+            }
+
 		}
 
-        protected virtual void ReloadRawAsset<T>(T asset, string assetName, string originalAssetName)
-        {
-            if (asset is Texture2D)
-            {
-                using (Stream assetStream = TitleContainer.OpenStream(assetName))
-                {
-                    var textureAsset = asset as Texture2D;
-                    textureAsset.Reload(assetStream);
-                }
-            }
-        }
+	    private void LoadXnbAsset<T>(T currentAsset, string assetName)
+	    {
+	        var stream = OpenStream(assetName);
 
-		public virtual void Unload()
+	        // Try to load as XNB file
+	        try
+	        {
+	            using (var xnbReader = new BinaryReader(stream))
+	            {
+	                using (var reader = GetContentReaderFromXnb(assetName, ref stream, xnbReader, null))
+	                {
+	                    reader.InitializeTypeReaders();
+	                    reader.ReadObject(currentAsset);
+	                    reader.ReadSharedResources();
+	                }
+	            }
+	        }
+	        finally
+	        {
+	            if (stream != null)
+	            {
+	                stream.Dispose();
+	            }
+	        }
+	    }
+
+	    private void ReloadAssetCore<T>(string originalAssetName, T currentAsset, string assetName)
+	    {
+	        assetName = TitleContainer.GetFilename(Path.Combine(RootDirectory, assetName));
+
+	        assetName = Normalize<T>(assetName);
+
+	        ReloadRawAsset(currentAsset, assetName, originalAssetName);
+	    }
+
+	    protected virtual void ReloadRawAsset<T>(T asset, string assetName, string originalAssetName)
+	    {
+	        if (!(asset is Texture2D))
+	            return;
+
+	        if (!TitleContainer.IsExists(assetName))
+	            return;
+
+	        ThreadPool.QueueUserWorkItem(_ =>
+	        {
+	            using (var stream = TitleContainer.OpenStream(assetName))
+	            {
+	                var textureAsset = asset as Texture2D;
+	                textureAsset.Reload(stream);
+	            }
+	        });
+	    }
+
+	    public virtual void Unload()
 		{
 		    // Look for disposable assets.
 		    foreach (var disposable in disposableAssets)

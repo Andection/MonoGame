@@ -1145,7 +1145,11 @@ namespace Microsoft.Xna.Framework.Graphics
         private void FillTexture(Stream textureStream)
         {
             var image = GetImage(textureStream);
-            SetData(image.GetColors());
+            var colors = image.GetColors();
+            if (colors.Length > 0)
+            {
+                SetData(colors);
+            }
         }
 
         private static ExtendedImage GetImage(Stream stream)

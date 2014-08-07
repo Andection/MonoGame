@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using SharpDX;
 using SharpDX.Direct3D11;
@@ -30,7 +31,10 @@ namespace MonoGame.Framework.WindowsPhone
             if (_game.GraphicsDevice != null)
                 _game.GraphicsDevice.OnDeviceResetting();
 
-            _game.Window.TouchPanelState.ReleaseAllTouches();
+            if (_game.Window != null)
+            {
+                _game.Window.TouchPanelState.ReleaseAllTouches();
+            }
 
             _host = null;
         }

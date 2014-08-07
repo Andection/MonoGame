@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Storage;
+﻿using System.IO;
 
 namespace Microsoft.Xna.Framework
 {
-    static public class MetroHelper
+    public static class MetroHelper
     {
-        static public bool AppDataFileExists(string fileName)
+        public static bool AppDataFileExists(string fileName)
         {
-            var result = Task.Run( async () => {
+            var fullFileName = Path.Combine(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, fileName);
+            return File.Exists(fullFileName);
+
+/*            var result = Task.Run( async () => {
 
                 try
                 {
@@ -25,7 +22,7 @@ namespace Microsoft.Xna.Framework
                 }
             }).Result;
 
-            return result;
+            return result;*/
         }
     }
 }
